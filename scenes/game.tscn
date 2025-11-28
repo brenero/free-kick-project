@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://bqd3va3ihs4ro"]
+
+[ext_resource type="Script" uid="uid://d17xilqjxf72x" path="res://scenes/game.gd" id="1_lnu2h"]
+[ext_resource type="PackedScene" uid="uid://cm0ceqj6crv1w" path="res://scenes/campo.tscn" id="1_uwrxv"]
+[ext_resource type="PackedScene" uid="uid://r23e8fmjv5l" path="res://scenes/ball.tscn" id="2_yqjtg"]
+[ext_resource type="PackedScene" uid="uid://dhadol14vuhhf" path="res://scenes/goal.tscn" id="4_lbhrr"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_lnu2h")
+SHOT_MULTIPLIER = 2.0
+
+[node name="Campo" parent="." instance=ExtResource("1_uwrxv")]
+
+[node name="Goal" parent="." instance=ExtResource("4_lbhrr")]
+transform = Transform3D(-0.01, 0, -8.7422775e-10, 0, 0.01, 0, 8.7422775e-10, 0, -0.01, -3.5, 0, 10)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-1, -2.9900352e-08, 8.215054e-08, 0, 0.9396927, 0.34202015, -8.742278e-08, 0.34202015, -0.9396927, 0, 1, -2)
+
+[node name="Ball" parent="." instance=ExtResource("2_yqjtg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19602796, 0)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.331305, 0.94352394, 0, -0.9435235, -0.331305, 0, 20, -20)
