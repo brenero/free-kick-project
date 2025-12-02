@@ -1,4 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://cm0ceqj6crv1w"]
+[gd_scene load_steps=5 format=3 uid="uid://cm0ceqj6crv1w"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_s2i2j"]
+friction = 0.1
+rough = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mc018"]
 albedo_color = Color(3.85046e-07, 0.48601913, 0.17728072, 1)
@@ -11,6 +15,7 @@ size = Vector2(48, 90)
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_s2i2j"]
 
 [node name="Campo" type="StaticBody3D"]
+physics_material_override = SubResource("PhysicsMaterial_s2i2j")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_mec61")
