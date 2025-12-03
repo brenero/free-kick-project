@@ -475,13 +475,13 @@ func calculate_defense_positions(ball_pos: Vector3) -> Dictionary:
 
 func setup_camera_position(ball_pos: Vector3) -> void:
 	"""
-	Posiciona câmera para enquadrar bola + gol
-	Calcula posição ótima baseada na posição da bola
+	Câmera acompanha a bola para mantê-la centralizada na tela
+	Rotação sempre mira o centro do gol (não a bola)
 	"""
-	# Calcular posição ideal
-	var camera_offset_x = ball_pos.x * 0.3  # Acompanha lateralmente (30%)
+	# Câmera acompanha a posição X da bola (mantém bola centralizada)
+	var camera_offset_x = ball_pos.x
 	var camera_offset_z = ball_pos.z - 3.0  # 3m atrás da bola
-	var camera_height = 2.5  # Altura fixa de 2.5m
+	var camera_height = 1.75  # Altura fixa de 1.75m
 
 	var target_position = Vector3(camera_offset_x, camera_height, camera_offset_z)
 
@@ -495,5 +495,6 @@ func setup_camera_position(ball_pos: Vector3) -> void:
 		# Primeira vez: posição instantânea
 		camera.global_position = target_position
 
-	# Câmera sempre olha para o centro do gol
-	camera.look_at(Vector3(0, 1.2, GOAL_Z), Vector3.UP)
+	# Rotação: câmera SEMPRE mira o centro do gol (não a bola!)
+	# Isso faz a câmera rotacionar para enquadrar tanto a bola quanto o gol
+	camera.look_at(Vector3(0, GOAL_HEIGHT / 2, GOAL_Z), Vector3.UP)
