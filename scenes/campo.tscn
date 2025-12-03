@@ -1,26 +1,133 @@
-[gd_scene load_steps=5 format=3 uid="uid://cm0ceqj6crv1w"]
+[gd_scene load_steps=7 format=3 uid="uid://cm0ceqj6crv1w"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_s2i2j"]
 friction = 0.1
 rough = true
+absorbent = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s2i2j"]
+albedo_color = Color(0.15251815, 0.44740498, 0.3742246, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mc018"]
-albedo_color = Color(3.85046e-07, 0.48601913, 0.17728072, 1)
+albedo_color = Color(0.15294118, 0.44705883, 0.37254903, 1)
 metallic_specular = 0.26
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_mec61"]
 material = SubResource("StandardMaterial3D_mc018")
-size = Vector2(48, 90)
+size = Vector2(80, 120)
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_s2i2j"]
 
-[node name="Campo" type="StaticBody3D"]
+[sub_resource type="StandardMaterial3D" id="WhiteLineMaterial"]
+shading_mode = 0
+
+[node name="Campo" type="Node3D"]
+
+[node name="Grama" type="StaticBody3D" parent="."]
 physics_material_override = SubResource("PhysicsMaterial_s2i2j")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Grama"]
+material_overlay = SubResource("StandardMaterial3D_s2i2j")
 mesh = SubResource("PlaneMesh_mec61")
 skeleton = NodePath("")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Grama"]
 shape = SubResource("WorldBoundaryShape3D_s2i2j")
 debug_fill = false
+
+[node name="Linhas" type="Node3D" parent="."]
+
+[node name="Perimeter" type="Node3D" parent="Linhas"]
+
+[node name="LineTopGoal" type="CSGBox3D" parent="Linhas/Perimeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, -52.5)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(68, 0.02, 0.12)
+
+[node name="LineBottomGoal" type="CSGBox3D" parent="Linhas/Perimeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 52.5)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(68, 0.02, 0.12)
+
+[node name="LineSideLeft" type="CSGBox3D" parent="Linhas/Perimeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 0.01, 0)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 105)
+
+[node name="LineSideRight" type="CSGBox3D" parent="Linhas/Perimeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 0.01, 0)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 105)
+
+[node name="LineMidfield" type="CSGBox3D" parent="Linhas/Perimeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(68, 0.02, 0.12)
+
+[node name="PenaltyAreaBottom" type="Node3D" parent="Linhas"]
+
+[node name="LineTop" type="CSGBox3D" parent="Linhas/PenaltyAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 36)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(40.32, 0.02, 0.12)
+
+[node name="LineLeft" type="CSGBox3D" parent="Linhas/PenaltyAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.16, 0.01, 44.25)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 16.5)
+
+[node name="LineRight" type="CSGBox3D" parent="Linhas/PenaltyAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.16, 0.01, 44.25)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 16.5)
+
+[node name="PenaltyAreaTop" type="Node3D" parent="Linhas"]
+
+[node name="LineBottom" type="CSGBox3D" parent="Linhas/PenaltyAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, -36)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(40.32, 0.02, 0.12)
+
+[node name="LineLeft" type="CSGBox3D" parent="Linhas/PenaltyAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.16, 0.01, -44.25)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 16.5)
+
+[node name="LineRight" type="CSGBox3D" parent="Linhas/PenaltyAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.16, 0.01, -44.25)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 16.5)
+
+[node name="GoalAreaBottom" type="Node3D" parent="Linhas"]
+
+[node name="LineTop" type="CSGBox3D" parent="Linhas/GoalAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 47)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(18.32, 0.02, 0.12)
+
+[node name="LineLeft" type="CSGBox3D" parent="Linhas/GoalAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.16, 0.01, 49.75)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 5.5)
+
+[node name="LineRight" type="CSGBox3D" parent="Linhas/GoalAreaBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.16, 0.01, 49.75)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 5.5)
+
+[node name="GoalAreaTop" type="Node3D" parent="Linhas"]
+
+[node name="LineBottom" type="CSGBox3D" parent="Linhas/GoalAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, -47)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(18.32, 0.02, 0.12)
+
+[node name="LineLeft" type="CSGBox3D" parent="Linhas/GoalAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.16, 0.01, -49.75)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 5.5)
+
+[node name="LineRight" type="CSGBox3D" parent="Linhas/GoalAreaTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.16, 0.01, -49.75)
+material_override = SubResource("WhiteLineMaterial")
+size = Vector3(0.12, 0.02, 5.5)

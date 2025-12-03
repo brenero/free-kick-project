@@ -15,11 +15,34 @@ var aim_position: Vector2 = Vector2(0.5, 0.5)  # Coordenadas UV no gol (0-1)
 # Goal dimensions and position
 const GOAL_WIDTH = 7.32  # Largura FIFA
 const GOAL_HEIGHT = 2.44  # Altura FIFA
-const GOAL_Z = 20.0  # Posição z do gol na cena
+const GOAL_Z = 52.5  # Posição z do gol na linha de fundo FIFA
+const GOALKEEPER_Z = 52.5  # Goleiro posicionado na linha do gol
+
+# Ball spawn constraints (FIFA dimensions)
+const PENALTY_AREA_DEPTH = 16.5  # Grande área: 16.5m de profundidade
+const PENALTY_AREA_FRONT = 36.0  # Entrada da grande área: 52.5 - 16.5
+const SHOOT_AREA_WIDTH = 10.0  # Largura da área de chute
+const SHOOT_AREA_DEPTH = 10.0  # Profundidade da área de chute (10m à frente da grande área)
+const SHOOT_AREA_FRONT = 26.0  # Início da área de chute: 36.0 - 10.0
+const FIELD_WIDTH = 68.0  # Largura do campo FIFA (para validações)
+const FIELD_DEPTH = 105.0  # Profundidade do campo FIFA (para validações)
+const CENTER_THRESHOLD = 1.0  # Threshold para considerar bola "no centro"
+
+# Visual field line constants (FIFA official dimensions)
+const FIELD_LINE_WIDTH = 68.0            # Largura oficial FIFA
+const FIELD_LINE_LENGTH = 105.0          # Comprimento oficial FIFA (campo completo)
+const VISUAL_PENALTY_AREA_WIDTH = 40.32  # Largura da grande área FIFA
+const VISUAL_PENALTY_AREA_DEPTH = 16.5   # Profundidade da grande área FIFA
+const VISUAL_GOAL_AREA_WIDTH = 18.32     # Largura da pequena área FIFA
+const VISUAL_GOAL_AREA_DEPTH = 5.5       # Profundidade da pequena área FIFA
+const LINE_WIDTH = 0.12                  # Largura das linhas: 12cm FIFA standard
 
 # References
 var initial_ball_transform: Transform3D
 @onready var ball: RigidBody3D = $Ball
+@onready var goalkeeper: CharacterBody3D = $Goalkeeper
+@onready var wall: Node3D = $Wall
+@onready var camera: Camera3D = $Camera3D
 var aim_marker: MeshInstance3D  # Marcador visual da mira
 var precision_circle: MeshInstance3D  # Círculo de precisão
 var timing_bar: CanvasLayer  # UI da barra de timing
@@ -33,7 +56,12 @@ var goal_reset_timer_active: bool = false
 
 
 func _ready() -> void:
+	# 1. Gerar posição inicial aleatória da bola
+	var new_ball_pos = generate_random_ball_position()
+	ball.global_position = new_ball_pos
 	initial_ball_transform = ball.global_transform
+
+	# 2. Criar elementos UI e jogo
 	create_aim_marker()
 	create_precision_circle()
 	create_timing_bar()
@@ -42,6 +70,11 @@ func _ready() -> void:
 	create_debug_hud()
 	create_instructions_hud()
 	update_aim_marker_position()
+
+	# 3. Posicionar defesa e câmera inteligentemente (após criar elementos)
+	await get_tree().process_frame
+	setup_defense_positioning(ball.global_position)
+	setup_camera_position(ball.global_position)
 
 
 func _process(delta: float) -> void:
@@ -169,14 +202,28 @@ func reset_ball():
 	# Cancelar qualquer timer de reset automático ativo
 	goal_reset_timer_active = false
 
-	# Reset completo da bola
+	# 1. Gerar nova posição aleatória da bola
+	var new_ball_pos = generate_random_ball_position()
 	ball.linear_velocity = Vector3.ZERO
 	ball.angular_velocity = Vector3.ZERO
-	ball.global_transform = initial_ball_transform
+	ball.global_position = new_ball_pos
+	initial_ball_transform = ball.global_transform
 
-	# Reset do detector de gol
+	# 2. Reposicionar defesa e câmera baseado na nova posição
+	setup_defense_positioning(new_ball_pos)
+	setup_camera_position(new_ball_pos)
+
+	# 3. Resets dos componentes
 	if goal_detector and goal_detector.has_method("reset"):
 		goal_detector.reset()
+
+	# Reset do goleiro (após atualizar initial_position via set_initial_position)
+	if goalkeeper and goalkeeper.has_method("reset"):
+		goalkeeper.reset()
+
+	# Reset da barreira
+	if wall and wall.has_method("reset_wall"):
+		wall.reset_wall()
 
 # Aiming system functions
 func create_aim_marker():
@@ -308,3 +355,145 @@ func _on_goal_scored():
 
 		if goal_detector and goal_detector.has_method("reset"):
 			goal_detector.reset()
+
+# ============================================================================
+# BALL SPAWN SYSTEM
+# ============================================================================
+
+func generate_random_ball_position() -> Vector3:
+	"""
+	Gera posição aleatória válida para a bola seguindo regras FIFA:
+	1. Dentro da área de chute (10m × 10m à frente da grande área)
+	2. Fora da grande área (mínimo 16.5m do gol)
+	3. Dentro de cone de 120° à frente do gol
+	"""
+	var max_attempts = 100
+
+	for attempt in range(max_attempts):
+		# Gerar coordenadas aleatórias dentro da área de chute
+		var random_x = randf_range(-SHOOT_AREA_WIDTH/2.0, SHOOT_AREA_WIDTH/2.0)
+		var random_z = randf_range(SHOOT_AREA_FRONT, PENALTY_AREA_FRONT)
+		var candidate = Vector3(random_x, 0.196, random_z)
+
+		if is_valid_ball_position(candidate):
+			return candidate
+
+	# Fallback: posição segura padrão (centro da área de chute)
+	print("⚠️ Não encontrou posição válida após ", max_attempts, " tentativas. Usando fallback.")
+	return Vector3(0, 0.196, 31.0)
+
+func is_valid_ball_position(pos: Vector3) -> bool:
+	"""
+	Valida se posição da bola atende todos os requisitos
+	"""
+	# 1. Verificar se está FORA da grande área
+	var penalty_area_min_z = GOAL_Z - PENALTY_AREA_DEPTH
+	if pos.z > penalty_area_min_z:
+		return false  # Dentro da grande área
+
+	# 2. Verificar se está dentro do campo
+	if abs(pos.x) > FIELD_WIDTH / 2.0:
+		return false  # Fora da largura
+	if pos.z < -FIELD_DEPTH / 2.0 or pos.z > GOAL_Z:
+		return false  # Fora da profundidade
+
+	# 3. Verificar cone de 120° (±60° do centro)
+	var vec_to_goal = Vector3(0, 0, GOAL_Z) - pos
+	var angle_rad = atan2(vec_to_goal.x, vec_to_goal.z)
+	var angle_deg = rad_to_deg(angle_rad)
+
+	if abs(angle_deg) > 60.0:
+		return false  # Fora do cone de 120°
+
+	return true
+
+# ============================================================================
+# INTELLIGENT DEFENSE POSITIONING
+# ============================================================================
+
+func setup_defense_positioning(ball_pos: Vector3) -> void:
+	"""
+	Posiciona barreira e goleiro inteligentemente baseado na posição da bola
+	"""
+	var positions = calculate_defense_positions(ball_pos)
+
+	# Posicionar barreira
+	if wall and wall.has_method("position_wall_intelligently"):
+		wall.position_wall_intelligently(ball_pos, Vector3(0, 0, GOAL_Z), positions.wall_side)
+
+	# Atualizar posição inicial do goleiro
+	if goalkeeper and goalkeeper.has_method("set_initial_position"):
+		var goalkeeper_pos = Vector3(positions.goalkeeper_x, 0, GOAL_Z)
+		goalkeeper.set_initial_position(goalkeeper_pos)
+
+func calculate_defense_positions(ball_pos: Vector3) -> Dictionary:
+	"""
+	Calcula lado da barreira e posição do goleiro
+
+	IMPLEMENTAÇÃO SIMPLES: Deslocamento horizontal baseado no lado da bola
+	- Barreira protege lado mais próximo
+	- Goleiro cobre lado oposto com deslocamento de 2.0m
+
+	FUTURA IMPLEMENTAÇÃO REALISTA (mais complexa):
+	Calcular ângulos exatos entre bola e postes para posicionamento ótimo:
+	- angle_to_near_post = atan2(near_post.x - ball.x, near_post.z - ball.z)
+	- angle_to_far_post = atan2(far_post.x - ball.x, far_post.z - ball.z)
+	- Barreira cobre ângulo de tiro mais direto (geralmente lado próximo)
+	- Goleiro posiciona-se no ponto médio da área descoberta pela barreira
+	- goalkeeper_optimal_x = calcular interseção de ângulos com linha do gol
+
+	Esta implementação futura consideraria:
+	- Geometria exata do cone de visão da bola para o gol
+	- Área "coberta" pela barreira (shadow zone)
+	- Posicionamento ótimo do goleiro = centro da área descoberta
+	"""
+	var result = {
+		"wall_side": 0,      # -1 = esquerda, 1 = direita
+		"goalkeeper_x": 0.0  # Posição X do goleiro
+	}
+
+	# Determinar lado baseado em posição X da bola
+	if abs(ball_pos.x) < CENTER_THRESHOLD:
+		# CENTRO: escolha aleatória de lados
+		result.wall_side = 1 if randf() > 0.5 else -1
+	elif ball_pos.x > 0:
+		# Bola à DIREITA: barreira cobre direita
+		result.wall_side = 1
+	else:
+		# Bola à ESQUERDA: barreira cobre esquerda
+		result.wall_side = -1
+
+	# Goleiro se desloca para o lado OPOSTO da barreira
+	# Deslocamento de 2.0m para cobrir o ângulo restante
+	result.goalkeeper_x = -result.wall_side * 2.0
+
+	return result
+
+# ============================================================================
+# CAMERA POSITIONING SYSTEM
+# ============================================================================
+
+func setup_camera_position(ball_pos: Vector3) -> void:
+	"""
+	Posiciona câmera para enquadrar bola + gol
+	Calcula posição ótima baseada na posição da bola
+	"""
+	# Calcular posição ideal
+	var camera_offset_x = ball_pos.x * 0.3  # Acompanha lateralmente (30%)
+	var camera_offset_z = ball_pos.z - 3.0  # 3m atrás da bola
+	var camera_height = 2.5  # Altura fixa de 2.5m
+
+	var target_position = Vector3(camera_offset_x, camera_height, camera_offset_z)
+
+	# Usar Tween para transição suave (se não for primeira vez)
+	if camera.global_position.distance_to(target_position) > 0.1:
+		var tween = create_tween()
+		tween.set_ease(Tween.EASE_IN_OUT)
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.tween_property(camera, "global_position", target_position, 0.8)
+	else:
+		# Primeira vez: posição instantânea
+		camera.global_position = target_position
+
+	# Câmera sempre olha para o centro do gol
+	camera.look_at(Vector3(0, 1.2, GOAL_Z), Vector3.UP)

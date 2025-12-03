@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3 uid="uid://cxk3j8v2n4m5p"]
+
+[ext_resource type="Script" path="res://scripts/goalkeeper.gd" id="1_goalkeeper"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_goalkeeper"]
+radius = 0.3
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_goalkeeper"]
+radius = 0.3
+height = 1.8
+
+[node name="Goalkeeper" type="CharacterBody3D"]
+script = ExtResource("1_goalkeeper")
+reaction_time = 0.3
+dive_speed = 8.0
+max_reach = 3.0
+jump_height = 2.0
+save_probability = 0.7
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_goalkeeper")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape_goalkeeper")
+
+[node name="Head" type="CSGSphere3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+radius = 0.2

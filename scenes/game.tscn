@@ -1,20 +1,22 @@
-[gd_scene load_steps=5 format=3 uid="uid://bqd3va3ihs4ro"]
+[gd_scene load_steps=7 format=3 uid="uid://bqd3va3ihs4ro"]
 
 [ext_resource type="Script" uid="uid://d17xilqjxf72x" path="res://scenes/game.gd" id="1_lnu2h"]
 [ext_resource type="PackedScene" uid="uid://cm0ceqj6crv1w" path="res://scenes/campo.tscn" id="1_uwrxv"]
 [ext_resource type="PackedScene" uid="uid://r23e8fmjv5l" path="res://scenes/ball.tscn" id="2_yqjtg"]
 [ext_resource type="PackedScene" uid="uid://dhadol14vuhhf" path="res://scenes/goal.tscn" id="4_lbhrr"]
+[ext_resource type="PackedScene" uid="uid://cxk3j8v2n4m5p" path="res://scenes/goalkeeper.tscn" id="5_goalkeeper"]
+[ext_resource type="PackedScene" uid="uid://b8k4m5n6p7q8r" path="res://scenes/wall.tscn" id="6_wall"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_lnu2h")
-MAX_CHARGE_TIME = 1.0
-AIM_SPEED = 3.0
+MAX_CHARGE_TIME = 0.5
+AIM_SPEED = 1.0
 precision_radius = 1.0
 
 [node name="Campo" parent="." instance=ExtResource("1_uwrxv")]
 
 [node name="Goal" parent="." instance=ExtResource("4_lbhrr")]
-transform = Transform3D(-0.01, 0, -8.7422775e-10, 0, 0.01, 0, 8.7422775e-10, 0, -0.01, 0, 0, 20)
+transform = Transform3D(-0.01, 0, -1.5099579e-09, 0, 0.01, 0, 1.5099579e-09, 0, -0.01, 0, 0, 52.5)
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(-1, -2.9900352e-08, 8.215054e-08, 0, 0.9396927, 0.34202015, -8.742278e-08, 0.34202015, -0.9396927, 0, 1, -2)
@@ -24,3 +26,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19602796, 0)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.331305, 0.94352394, 0, -0.9435235, -0.331305, 0, 20, -20)
+
+[node name="Goalkeeper" parent="." instance=ExtResource("5_goalkeeper")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 52.5)
+
+[node name="Wall" parent="." instance=ExtResource("6_wall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.15)
+player_spacing = 0.5
+player_height = 1.4
+jump_chance = 0.8
+jump_delay = 0.1
+jump_height = 0.1

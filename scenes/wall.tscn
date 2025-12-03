@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8k4m5n6p7q8r"]
+
+[ext_resource type="Script" path="res://scripts/wall.gd" id="1_wall"]
+
+[node name="Wall" type="Node3D"]
+script = ExtResource("1_wall")
+num_players = 5
+player_spacing = 0.7
+player_height = 1.8
+wall_distance = 9.15
+jump_chance = 0.6
+jump_delay = 0.4
+jump_height = 0.8
